@@ -9,7 +9,11 @@ function drawTunnelArt(left,right,roof){
  if(!tunnelImage?.complete||!tunnelImage.naturalWidth){canvas.dataset.tunnelArt='loading';return false}
  if(!tunnelTexture){const im=tunnelImage,overlap=Math.round(im.naturalWidth*.06),cv=document.createElement('canvas');cv.width=im.naturalWidth-overlap;cv.height=im.naturalHeight;const c=cv.getContext('2d');c.drawImage(im,-overlap,0);const edge=document.createElement('canvas');edge.width=overlap;edge.height=cv.height;const e=edge.getContext('2d');e.drawImage(im,0,0);e.globalCompositeOperation='destination-in';const g=e.createLinearGradient(0,0,overlap,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,1)');e.fillStyle=g;e.fillRect(0,0,overlap,cv.height);c.drawImage(edge,cv.width-overlap,0);tunnelTexture=cv;}
  const height=(floor+270-roof)/.93,w=tunnelTexture.width/tunnelTexture.height*height,offset=travel-PX,first=Math.floor((offset+left)/w)-1;
- for(let i=first;i<Math.ceil((offset+right)/w)+1;i++)ctx.drawImage(tunnelTexture,i*w-offset,roof,w,height);
+ ctx.save();ctx.filter='brightness(.38) saturate(.7)';for(let i=first;i<Math.ceil((offset+right)/w)+1;i++)ctx.drawImage(tunnelTexture,i*w-offset,roof,w,height);ctx.restore();
+ const base=floor+270;ctx.save();ctx.globalAlpha=.85;
+ for(let world=Math.floor((travel-PX+left)/310)*310;world<travel-PX+right+310;world+=310){const x=streetX(world);line(x+16,roof+24,x+220,roof+24,'#8fe8ed',3);line(x+25,base-17,x+180,base-17,'#54c8cf',1.5);
+  ctx.fillStyle='rgba(12,48,64,.82)';ctx.fillRect(x+30,roof+100,88,43);ctx.strokeStyle='#69becb';ctx.lineWidth=.7;ctx.strokeRect(x+30,roof+100,88,43);ctx.fillStyle='#b5e7e9';ctx.font='7px monospace';ctx.textAlign='left';ctx.fillText('MAKAN / MOBILITY',x+37,roof+111);for(let j=0;j<4;j++)line(x+38,roof+119+j*5,x+65+(j%2)*32,roof+119+j*5,'#5ca4b4',1);
+ }ctx.restore();
  canvas.dataset.tunnelArt='ready';return true;
 }
 const streetImage=window.Image?new window.Image():null;let streetTexture=null;
@@ -42,8 +46,8 @@ function currentZone(){return Math.floor(travel/6500)%districts.length}
 function tunnelRoute(at=travel){const p=((at%22000)+22000)%22000;return{p,entry:PX+5200-p,exit:PX+10800-p,ahead:5200-p,inside:p>=5200&&p<10800}}
 function routeDepth(at=travel){const {p}=tunnelRoute(at),ease=t=>t*t*(3-2*t);return p<5200?0:p<5650?ease((p-5200)/450):p<10800?1:p<11250?1-ease((p-10800)/450):0}
 
-function setTheme(dark){if(dark===themeActive)return;themeActive=dark;document.documentElement.classList.toggle('underground',dark);document.querySelector('meta[name="theme-color"]').setAttribute('content',dark?'#000000':'#ffffff')}
-function hud(){score=Math.floor(travel/10)+bonus;$('score').textContent=String(score).padStart(4,'0');$('distance').textContent=String(Math.floor(travel/10)).padStart(4,'0')+' m';$('jumps').textContent=(2-player.jumps)+' / 2';const z=currentZone();$('phase').textContent=routeDepth()>.10?'UNDERGROUND / TRANSIT PASSAGE':String(z+1).padStart(2,'0')+' / '+districts[z].name;setTheme(routeDepth()>.10)}
+function setTheme(dark){if(dark===themeActive)return;themeActive=dark;document.documentElement.classList.toggle('underground',dark);document.querySelector('meta[name="theme-color"]').setAttribute('content',dark?'#101c2b':'#ffffff')}
+function hud(){$('speed').textContent=(runningSpeed()/250).toFixed(2)+'×';score=Math.floor(travel/10)+bonus;$('score').textContent=String(score).padStart(4,'0');$('distance').textContent=String(Math.floor(travel/10)).padStart(4,'0')+' m';$('jumps').textContent=(2-player.jumps)+' / 2';const z=currentZone();$('phase').textContent=routeDepth()>.10?'UNDERGROUND / TRANSIT PASSAGE':String(z+1).padStart(2,'0')+' / '+districts[z].name;setTheme(routeDepth()>.10)}
 
 function panel(title,message,label){$('title').textContent=title;$('message').textContent=message;$('start').textContent=label;$('overlay').hidden=false}
 function reset(){cameraDistance=0;time=0;travel=0;score=0;bonus=0;spawn=2.6;nextNode=2.2;objects=[];models=[];jumpBuffer=0;zoneSeen=0;chunk=0;bus=null;nextBus=9;coverGrace=0;setTheme(false);player={y:floor-bodyHeight,vy:0,jumps:0,dropping:false,dropPose:0,landing:0};state='running';hud();$('overlay').hidden=true;$('pause').disabled=false;$('pause').textContent='Pause';$('announcement').textContent='Jump twice to reach higher. Down / Drop descends quickly.';last=performance.now();canvas.focus()}
@@ -60,11 +64,23 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='r
 function line(x,y,a,b,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(a,b);ctx.stroke()}
 function poly(points,fill,stroke){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
 function ellipse(x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()}
-function obstacle(o,d){const x=o.x,y=floor;ctx.save();ctx.strokeStyle='#708a98';ctx.lineWidth=1.5;
- if(o.type==='planter'){poly([[x,y-26],[x+o.w,y-26],[x+o.w-5,y],[x+5,y]],'#d7e2e7','#91a6b2');for(let j=0;j<5;j++){line(x+8+j*6,y-27,x+4+j*7,y-o.h+5,'#6b9781',2);ellipse(x+7+j*7,y-o.h+9,5,8,'#9abd9f')}}
- else if(o.type==='bench'){poly([[x,y-o.h],[x+o.w,y-o.h],[x+o.w-4,y-o.h+8],[x-3,y-o.h+8]],'#b0c4ce','#6e8999');line(x+8,y-o.h+8,x+8,y,'#7893a3',3);line(x+o.w-10,y-o.h+8,x+o.w-10,y,'#7893a3',3);line(x+3,y-o.h+3,x+o.w-3,y-o.h+3,'#f5fafb')}
- else if(o.type==='rack'){ctx.strokeStyle='#708a98';for(let j=0;j<2;j++){const bx=x+4+j*18;ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx,y-o.h+8);ctx.quadraticCurveTo(bx+8,y-o.h-5,bx+16,y-o.h+8);ctx.lineTo(bx+16,y);ctx.stroke()}}
- else for(let j=0;j<2;j++){const bx=x+j*23;poly([[bx,y],[bx,y-o.h+4],[bx+6,y-o.h],[bx+13,y-o.h+4],[bx+13,y]],'#c3d5de','#7a98a9');line(bx+2,y-o.h+10,bx+11,y-o.h+10,d.accent,3)}ctx.restore();}
+function obstacle(o,d){const x=o.x,y=floor,w=o.w,h=o.h;ctx.save();
+ // A dark base and pale outer edge separate hazards from every street material.
+ ellipse(x+w/2,y+2,w*.65,4,'rgba(20,31,40,.28)');
+ if(o.type==='cone'||o.type==='planter'){
+  poly([[x+3,y-5],[x+w*.40,y-h],[x+w*.60,y-h],[x+w-3,y-5]],'#e36b28','#fff4d9');
+  poly([[x+w*.31,y-h*.66],[x+w*.69,y-h*.66],[x+w*.76,y-h*.45],[x+w*.24,y-h*.45]],'#fff8df');
+  poly([[x-2,y-5],[x+w+2,y-5],[x+w+3,y],[x-3,y]],'#283e4a','#f6eed9');
+ }else if(o.type==='warning'||o.type==='rack'){
+  line(x+w*.35,y-h*.35,x+w*.25,y,'#283e4a',3);line(x+w*.65,y-h*.35,x+w*.75,y,'#283e4a',3);
+  poly([[x+w*.5,y-h],[x+w,y-h*.2],[x,y-h*.2]],'#f7f1d8','#fffbea');
+  poly([[x+w*.5,y-h+4],[x+w-5,y-h*.2-3],[x+5,y-h*.2-3]],'#f7b34a','#b64726');
+  line(x+w*.5,y-h*.72,x+w*.5,y-h*.46,'#263d48',3);ellipse(x+w*.5,y-h*.34,1.8,1.8,'#263d48');
+ }else{
+  line(x+8,y-h+4,x+8,y,'#283e4a',4);line(x+w-8,y-h+4,x+w-8,y,'#283e4a',4);
+  poly([[x,y-h],[x+w,y-h],[x+w,y-10],[x,y-10]],'#e36b28','#fff4d9');
+  ctx.save();ctx.beginPath();ctx.rect(x+2,y-h+2,w-4,h-14);ctx.clip();for(let j=-1;j<5;j++)poly([[x+j*19,y-10],[x+j*19+8,y-10],[x+j*19+25,y-h],[x+j*19+17,y-h]],'#fff6df');ctx.restore();
+ }ctx.restore();}
 // Eight authored side-view poses: contact, weight, passing, push-off and recovery.
 const runKeys=[
  {k:[8,44],f:[19,60]}, {k:[0,45],f:[-1,60]},
@@ -88,7 +104,7 @@ function runnerPose(){
  return{grounded,phase,bob,dive,compression,hip,back:leg((phase+.5)%1,1),front:leg(phase,0)};
 }
 function runner(){const p=runnerPose(),x=PX+14,y=player.y,b=p.bob;
- const height=floor-(player.y+bodyHeight);ellipse(x,floor+3,17-clamp(height/18,0,7),2.3,'#dce5e9');ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+ const height=floor-(player.y+bodyHeight);ellipse(x,floor+3,17-clamp(height/18,0,7),2.3,routeDepth()>.1?'rgba(0,0,0,.35)':'#dce5e9');ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
  function leg(l,color){line(l.hip.x,l.hip.y,l.knee.x,l.knee.y,color,5.1);line(l.knee.x,l.knee.y,l.foot.x,l.foot.y-1,color,3.9);line(l.foot.x-1,l.foot.y,l.foot.x+4,l.foot.y,color,2.6)}
  const swing=p.grounded?Math.cos(p.phase*Math.PI*2):.55,sy=y+18+b,lean=p.dive*4;
  function arm(sign,color){const ex=x+1-sign*swing*8,ey=sy+9,brake=Math.max(p.dive,p.compression/10);const bx=ex+(x+sign*8-ex)*brake,by=ey-brake*2;line(x+1+lean,sy,bx,by,color,3.5);line(bx,by,bx+8*(1-brake)-sign*brake*2,by-7+brake*16,color,3)}
@@ -101,11 +117,12 @@ function runner(){const p=runnerPose(),x=PX+14,y=player.y,b=p.bob;
 // The approach and exit are open ramps. Physics stays in local walkway coordinates.
 function terrainOffset(x=PX){const p=tunnelRoute().p+x-PX,ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};return 270*ease((p-4350)/850)*(1-ease((p-10800)/850))}
 function drawRoutePaving(scene){
+ const depth=routeDepth(),mix=(a,b)=>`rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*depth)).join(",")})`,pave=mix([244,241,232],[31,53,67]),foundation=mix([130,157,170],[17,33,48]),curb=mix([180,200,208],[64,111,123]),joints=mix([213,220,214],[45,78,90]);
  const points=[];for(let x=-20;x<W+30;x+=10)points.push([x,floor+terrainOffset(x)]);
- poly([...points.map(([x,y])=>[x,y-6]),...points.slice().reverse().map(([x,y])=>[x,y+13])],'#f4f1e8');
- poly([...points.map(([x,y])=>[x,y+13]),[W+30,H+400],[-20,H+400]],'#829daa');
- for(let i=1;i<points.length;i++)line(points[i-1][0],points[i-1][1]+13,points[i][0],points[i][1]+13,'#b4c8d0',2);
- for(let world=Math.floor((travel-PX)/100)*100;world<travel-PX+W+100;world+=100){const x=streetX(world),y=floor+terrainOffset(x);line(x,y-6,x-18,y+12,'#d5dcd6',.8)}
+ poly([...points.map(([x,y])=>[x,y-6]),...points.slice().reverse().map(([x,y])=>[x,y+13])],pave);
+ poly([...points.map(([x,y])=>[x,y+13]),[W+30,H+400],[-20,H+400]],foundation);
+ for(let i=1;i<points.length;i++)line(points[i-1][0],points[i-1][1]+13,points[i][0],points[i][1]+13,curb,2);
+ for(let world=Math.floor((travel-PX)/100)*100;world<travel-PX+W+100;world+=100){const x=streetX(world),y=floor+terrainOffset(x);line(x,y-6,x-18,y+12,joints,.8)}
 }
 function tunnelScene(depth){
  const route=tunnelRoute(),start=route.entry-850,end=route.exit+850,roof=floor-20;
@@ -140,7 +157,7 @@ function busCoversPlayer(){return !!bus&&bus.x<PX+40&&bus.x+bus.w>PX-28}
 function busDrawing(){if(!bus)return;const x=bus.x,y=floor-74,w=bus.w;ctx.save();ctx.lineJoin='round';ctx.fillStyle='#f1f5f6';ctx.strokeStyle='#8ea7b4';ctx.lineWidth=1.2;ctx.beginPath();ctx.roundRect(x,y,w,81,10);ctx.fill();ctx.stroke();ctx.fillStyle='#658596';ctx.fillRect(x+14,y+11,w-29,30);for(let k=0;k<9;k++)line(x+19+k*31,y+12,x+19+k*31,y+40,'#d3e1e8',2);ctx.fillStyle='#68a7b4';ctx.fillRect(x+2,y+49,w-4,9);ctx.fillStyle='#3f5969';ctx.font='bold 10px Arial';ctx.textAlign='left';ctx.fillText('AMMAN / RAPID TRANSIT',x+16,y+70);line(x+w-54,y+44,x+w-54,y+78,'#a8bdc8',1);ellipse(x+58,y+79,14,14,'#46616f');ellipse(x+58,y+79,6,6,'#c9d8df');ellipse(x+w-58,y+79,14,14,'#46616f');ellipse(x+w-58,y+79,6,6,'#c9d8df');ctx.restore();}
 function spawnChunk(){
  chunk++;if(chunk%4===0){for(let j=0;j<3;j++)models.push({x:W+50+j*38,y:floor-40,id:chunk+j,collected:false});return}
- const types=['planter','bench','rack','bollards'],type=types[Math.floor(Math.random()*4)],w=type==='bench'?59:type==='planter'?43:38,h=type==='bench'?31:type==='planter'?46:40,x=W+60;
+ const types=['cone','barrier','warning'],type=types[Math.floor(Math.random()*types.length)],w=type==='barrier'?56:type==='cone'?36:40,h=type==='cone'?46:type==='warning'?48:38,x=W+60;
  objects.push({x,w,h,type,chunk});
  // A collectible shares the obstacle's jump arc; there are no independent trap pairs.
  models.push({x:x+w/2,y:floor-132,id:chunk,collected:false,chunk});
@@ -152,11 +169,12 @@ function draw(){
  streetArchitecture();environment.publicRealm?.({...scene,camera:travel});
  const route=tunnelRoute();
  tunnelScene(depth);drawRoutePaving(scene);ctx.save();ctx.translate(0,terrainOffset(PX));
- objects.forEach(o=>{ctx.save();ctx.translate(0,terrainOffset(o.x+o.w/2)-terrainOffset(PX));obstacle(o,d);ctx.restore()});models.forEach(m=>{const yy=m.y+Math.sin(time*3+m.id)*4;ctx.save();ctx.translate(m.x,yy+terrainOffset(m.x)-terrainOffset(PX));ctx.rotate(Math.sin(time*2+m.id)*.12);poly([[0,-11],[10,-5],[10,7],[0,13],[-10,7],[-10,-5]],'#e6f8fb','#56a8b9');line(-10,-5,0,1,'#56a8b9');line(10,-5,0,1,'#56a8b9');line(0,1,0,13,'#56a8b9');ctx.restore()});runner();busDrawing();ctx.restore();ctx.restore();
+ objects.forEach(o=>{ctx.save();ctx.translate(0,terrainOffset(o.x+o.w/2)-terrainOffset(PX));obstacle(o,d);ctx.restore()});models.forEach(m=>{const yy=m.y+Math.sin(time*3+m.id)*4;ctx.save();ctx.translate(m.x,yy+terrainOffset(m.x)-terrainOffset(PX));ctx.rotate(Math.sin(time*2+m.id)*.12);poly([[0,-11],[10,-5],[10,7],[0,13],[-10,7],[-10,-5]],'#e6f8fb','#56a8b9');line(-10,-5,0,1,'#56a8b9');line(10,-5,0,1,'#56a8b9');line(0,1,0,13,'#56a8b9');ctx.restore()});ctx.save();if(routeDepth()>.1)ctx.filter='brightness(3) saturate(.5)';runner();ctx.restore();busDrawing();ctx.restore();ctx.restore();
  ctx.fillStyle='#5b7e92';ctx.font='9px monospace';ctx.textAlign='left';ctx.fillText(depth>.45?'UNDERGROUND / TRANSIT PASSAGE':'MAKAN / CONNECTED URBAN DISTRICT',20,H-18);ctx.textAlign='right';const ahead=tunnelRoute().ahead;ctx.fillText(ahead>0&&ahead<1200?'UNDERPASS IN '+Math.ceil(ahead/10)+' m':'E / EXPLORE A LANDMARK',W-20,H-18);
 }
+function runningSpeed(seconds=time){return 250+290*(1-Math.exp(-seconds/80))}
 function update(dt){
- time+=dt;const speed=265+Math.min(time*2.7,155);travel+=speed*dt;cameraDistance+=(travel-cameraDistance)*(1-Math.exp(-dt*12));const z=currentZone();if(z!==zoneSeen){zoneSeen=z;$('announcement').textContent='Entering '+districts[z].name+'.'}
+ time+=dt;const speed=runningSpeed();travel+=speed*dt;cameraDistance+=(travel-cameraDistance)*(1-Math.exp(-dt*12));const z=currentZone();if(z!==zoneSeen){zoneSeen=z;$('announcement').textContent='Entering '+districts[z].name+'.'}
  jumpBuffer=Math.max(0,jumpBuffer-dt);player.landing=Math.max(0,(player.landing||0)-dt);player.dropPose=(player.dropPose||0)+((player.dropping?1:0)-(player.dropPose||0))*(1-Math.exp(-dt*20));const wasAirborne=player.y<floor-bodyHeight-.1||player.vy<0;player.vy+=(player.dropping?3200:1850)*dt;player.y=Math.min(floor-bodyHeight,player.y+player.vy*dt);
  if(player.y>=floor-bodyHeight){if(wasAirborne)player.landing=player.dropping?.26:.14;player.vy=0;player.jumps=0;player.dropping=false;if(jumpBuffer>0)jump()}
  coverGrace=Math.max(0,coverGrace-dt);nextBus-=dt;
@@ -176,6 +194,7 @@ for(const button of document.querySelectorAll('[data-project]'))button.addEventL
 
 function frame(now){let remaining=Math.min(Math.max((now-last)/1000,0),.1);last=now;ambientTime+=remaining;while(remaining>0&&state==='running'){const dt=Math.min(remaining,1/120);update(dt);remaining-=dt}draw();requestAnimationFrame(frame)}requestAnimationFrame(frame);
 })();
+
 
 
 
