@@ -35,3 +35,12 @@
  .about-preview-actions{gap:16px;grid-column:1/-1}
  .about-preview-actions .btn{font-size:10px;padding:14px}
 }
+@media(max-width:600px){
+ .about-preview-copy{display:contents}
+ .about-preview-portrait{grid-column:1;grid-row:1 / span 3}
+ .about-preview-copy>.eyebrow{grid-column:2;grid-row:1;align-self:end}
+ .about-preview-copy>h2{grid-column:2;grid-row:2;margin:0}
+ .about-preview-copy>.about-preview-role{grid-column:2;grid-row:3;margin:0;align-self:start}
+ .about-preview-copy>p:not(.about-preview-role),.about-preview-copy>.about-preview-actions{grid-column:1 / -1;margin-top:0}
+ .about-preview-layout{gap:12px 20px}
+}
