@@ -1,42 +1,39 @@
-/* Scoped to The Curator; other project layouts remain unchanged. */
-.curator-project .detail-hero{padding-bottom:40px}
+/* Continuous project story: every chapter and sheet is visible. */
+.curator-project .detail-hero{padding-bottom:38px}
 .curator-project .opening-spread img{max-height:460px;object-fit:contain}
 .curator-project .detail-body{padding-top:20px;padding-bottom:35px}
-.curator-project .detail-copy>section{margin-top:35px;padding-top:25px}
+.curator-project .detail-copy>section{margin-top:38px;padding-top:28px;scroll-margin-top:100px}
 .curator-project .detail-copy>#overview{margin-top:0;padding-top:0}
 .curator-presentation-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 .curator-presentation-grid figure{margin:0;min-width:0}
 .curator-presentation-grid a{display:block;background:#f5f5f5}
-.curator-presentation-grid img{display:block;width:100%;height:auto;max-height:330px;object-fit:contain}
+.curator-presentation-grid img{display:block;width:100%;height:auto;max-height:320px;object-fit:contain}
 .curator-presentation-grid figcaption{font-size:11px;line-height:1.7;color:#666;padding-top:10px}
-.curator-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:25px 0}
-.curator-tabs button{background:#fff;border:1px solid #ccc;color:#555;padding:12px 14px;font:inherit;font-size:11px;cursor:pointer}
-.curator-tabs button[aria-selected=true]{background:#111;border-color:#111;color:#fff}
-.curator-tabs button:focus-visible,.curator-gallery-controls button:focus-visible{outline:2px solid #111;outline-offset:3px}
-.curator-panels .project-chapter{margin-top:0;padding-top:20px;scroll-margin-top:95px}
-.curator-panels [hidden],.curator-gallery-controls[hidden]{display:none!important}
-.curator-project .curator-panels .landscape-sheets{display:block}
-.curator-project .curator-panels .landscape-sheets figure{margin:0}
-.curator-project .curator-panels .landscape-sheets img{max-height:540px;object-fit:contain;background:#f5f5f5}
-.curator-gallery-controls{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:18px}
-.curator-gallery-controls button{border:1px solid #ccc;background:#fff;padding:11px 14px;font-size:11px;cursor:pointer}
-.curator-gallery-controls button:disabled{opacity:.35;cursor:default}
-.curator-gallery-controls span{font-size:11px;color:#666;white-space:nowrap}
+.curator-project .landscape-sheets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.curator-project .landscape-sheets figure{margin:0;min-width:0}
+.curator-project .landscape-sheets img{display:block;width:100%;height:auto;aspect-ratio:2400/1697;object-fit:contain;background:#f5f5f5}
+.curator-project .landscape-sheets figcaption{font-size:10px;line-height:1.6;gap:10px}
+.curator-project .urban-render-grid{gap:20px}
+.curator-project .urban-render-grid img{max-height:330px;object-fit:contain}
+.curator-archive{border-top:1px solid #ddd;margin-top:32px;padding-top:20px}
+.curator-archive summary{cursor:pointer;font-size:14px;padding:10px 0}
+.curator-archive .sheet-index{margin-top:20px}
 .curator-project .detail-next{padding:35px 0}
 .curator-project>.contact{padding-top:40px}
 .curator-project>.contact h2{font-size:clamp(45px,6vw,75px)}
-.curator-project .curator-explore,.curator-project .curator-presentation{scroll-margin-top:100px}
-@media(max-width:700px){
+@media(max-width:800px){
+ .curator-project .detail-body{grid-template-columns:1fr;gap:22px}
+ .curator-project .project-navigation{position:static;display:flex;flex-direction:row;flex-wrap:wrap;gap:0 20px}
+ .curator-project .project-navigation a{font-size:10px;padding:11px 0}
+ .curator-project .detail-copy>section{margin-top:30px;padding-top:24px}
+}
+@media(max-width:600px){
  .curator-project .detail-hero{padding-top:30px;padding-bottom:25px}
  .curator-project .opening-spread img{max-height:310px}
- .curator-project .detail-body{gap:25px}
- .curator-project .project-navigation{position:static;display:flex;flex-direction:row;flex-wrap:wrap;gap:10px 20px}
- .curator-project .project-navigation a{font-size:10px;padding:10px 0}
- .curator-presentation-grid{grid-template-columns:1fr;gap:20px}
- .curator-presentation-grid img{max-height:280px}
- .curator-tabs{gap:7px;margin:20px 0}
- .curator-tabs button{padding:11px 12px;font-size:10px}
- .curator-gallery-controls{gap:8px}
- .curator-gallery-controls button{font-size:10px;padding:10px}
- .curator-project .detail-copy>section{margin-top:25px}
+ .curator-presentation-grid{gap:14px}
+ .curator-presentation-grid img{max-height:200px}
+ .curator-presentation-grid figcaption{font-size:10px}
+ .curator-project .landscape-sheets{grid-template-columns:1fr;gap:22px}
+ .curator-project .landscape-sheets img{max-height:290px}
+ .curator-project .landscape-sheets figcaption{font-size:10px}
 }
