@@ -39,7 +39,7 @@
   if (scene) {
     let frame = 0, x = 0, y = 0;
     scene.addEventListener('pointermove', event => {
-      if (paused || reduced.matches || !finePointer.matches) return;
+      if (paused || reduced.matches || !finePointer.matches || scene.classList.contains('webgl-ready')) return;
       const rect = scene.getBoundingClientRect();
       x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
       y = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
@@ -95,6 +95,6 @@
         animation.finished.then(() => animations.delete(animation)).catch(() => animations.delete(animation));
       });
     }, { threshold: .08 });
-    root.querySelectorAll('.section-head, .work-card, .cap, .about-preview-layout').forEach(element => revealObserver.observe(element));
+    root.querySelectorAll('.section-head, .cap, .about-preview-layout').forEach(element => revealObserver.observe(element));
   }
 })();
